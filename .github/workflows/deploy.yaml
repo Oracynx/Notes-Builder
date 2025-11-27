@@ -25,20 +25,34 @@ jobs:
         run: |
           #!/usr/bin/env bash
           find ./content -type f -name "*.md" | while read -r file; do
+            echo "DEBUG: processing file=$file"
+
+            # 找到第一个 Markdown 标题行
             first_line=$(grep -m1 -E '^#{1,6}[[:space:]]*.+$' "$file")
+            echo "DEBUG: first_line='$first_line'"
+
+            # 提取标题文本
             title=$(echo "$first_line" | sed -E 's/^#{1,6}[[:space:]]*//')
+            echo "DEBUG: extracted title='$title'"
+
             if [ -n "$title" ]; then
               if grep -q '^---' "$file"; then
                 if grep -q '^title:' "$file"; then
+                  echo "DEBUG: replacing existing title in $file"
                   sed -i "s/^title:.*/title: ${title}/" "$file"
                 else
+                  echo "DEBUG: inserting title into existing frontmatter in $file"
                   sed -i "1,/^---$/ {/^---$/i title: ${title}}" "$file"
                 fi
               else
+                echo "DEBUG: adding new frontmatter with title to $file"
                 sed -i "1i ---\ntitle: ${title}\n---" "$file"
               fi
+            else
+              echo "DEBUG: no title extracted for $file"
             fi
           done
+
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
