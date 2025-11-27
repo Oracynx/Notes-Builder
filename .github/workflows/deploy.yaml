@@ -1,0 +1,40 @@
+name: Build and Deploy Quartz Site
+
+on:
+  repository_dispatch:
+    types: [build-site]   # 接收来自 Notes 仓库的触发事件
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Quartz
+        uses: actions/checkout@v3
+
+      - name: Checkout Vault
+        uses: actions/checkout@v3
+        with:
+          repository: Oracynx/Notes
+          path: vault
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+
+      - name: Sync Notes
+        run: |
+          rsync -av --exclude='.git' vault/ ./content/
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build Quartz
+        run: npm run build
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
