@@ -23,25 +23,23 @@ jobs:
 
       - name: Inject title from first heading
         run: |
+          #!/usr/bin/env bash
           for file in ./content/**/*.md; do
-            # 找到第一个非空行
-            first_line=$(grep -m1 -E '^[^[:space:]]' "$file")
-            if [[ $first_line =~ ^\#\ (.*) ]]; then
-              title="${BASH_REMATCH[1]}"
-              # 检查是否已有 frontmatter
+            first_line=$(grep -m1 -E '^#{1,6}[[:space:]]*.+$' "$file")
+            title=$(echo "$first_line" | sed -E 's/^#{1,6}[[:space:]]*//')
+            if [ -n "$title" ]; then
               if grep -q '^---' "$file"; then
-                # 如果已有 frontmatter，插入或替换 title 字段
                 if grep -q '^title:' "$file"; then
                   sed -i "s/^title:.*/title: ${title}/" "$file"
                 else
-                  sed -i "1,/^---$/ s/^---$/title: ${title}\n---/" "$file"
+                  sed -i "1,/^---$/ {/^---$/i title: ${title}}" "$file"
                 fi
               else
-                # 没有 frontmatter则在文件开头插入
                 sed -i "1i ---\ntitle: ${title}\n---" "$file"
               fi
             fi
           done
+
 
 
       - name: Setup Node.js
