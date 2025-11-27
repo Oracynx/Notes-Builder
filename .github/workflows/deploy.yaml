@@ -24,7 +24,7 @@ jobs:
       - name: Inject title from first heading
         run: |
           #!/usr/bin/env bash
-          for file in ./content/**/*.md; do
+          find ./content -type f -name "*.md" | while read -r file; do
             first_line=$(grep -m1 -E '^#{1,6}[[:space:]]*.+$' "$file")
             title=$(echo "$first_line" | sed -E 's/^#{1,6}[[:space:]]*//')
             if [ -n "$title" ]; then
@@ -39,8 +39,6 @@ jobs:
               fi
             fi
           done
-
-
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
