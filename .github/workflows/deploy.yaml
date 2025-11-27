@@ -21,6 +21,29 @@ jobs:
       - name: Sync Notes
         run: rsync -av --exclude='.git' vault/ ./content/
 
+      - name: Inject title from first heading
+        run: |
+          for file in ./content/**/*.md; do
+            # 找到第一个非空行
+            first_line=$(grep -m1 -E '^[^[:space:]]' "$file")
+            if [[ $first_line =~ ^\#\ (.*) ]]; then
+              title="${BASH_REMATCH[1]}"
+              # 检查是否已有 frontmatter
+              if grep -q '^---' "$file"; then
+                # 如果已有 frontmatter，插入或替换 title 字段
+                if grep -q '^title:' "$file"; then
+                  sed -i "s/^title:.*/title: ${title}/" "$file"
+                else
+                  sed -i "1,/^---$/ s/^---$/title: ${title}\n---/" "$file"
+                fi
+              else
+                # 没有 frontmatter则在文件开头插入
+                sed -i "1i ---\ntitle: ${title}\n---" "$file"
+              fi
+            fi
+          done
+
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
