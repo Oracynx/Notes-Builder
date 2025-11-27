@@ -8,12 +8,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 22
-          check-latest: true
-
       - name: Checkout Quartz
         uses: actions/checkout@v3
 
@@ -25,13 +19,16 @@ jobs:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
       - name: Sync Notes
-        run: |
-          rsync -av --exclude='.git' vault/ ./content/
+        run: rsync -av --exclude='.git' vault/ ./content/
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 22
+          check-latest: true
+
+      - name: Upgrade npm
+        run: npm install -g npm@latest
 
       - name: Install dependencies
         run: npm install
